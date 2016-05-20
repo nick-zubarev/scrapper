@@ -8,7 +8,10 @@
 import scrapy
 
 
-class CrawlerItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class CompanyItem(scrapy.Item):
+    name = scrapy.Field()
+    email = scrapy.Field()
+    phone = scrapy.Field()
+    direct = scrapy.Field()
+    category = scrapy.Field()
+    location = scrapy.Field()

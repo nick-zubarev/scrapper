@@ -4,6 +4,7 @@ cffi==1.6.0
 cryptography==1.3.2
 cssselect==0.9.1
 enum34==1.1.6
+fuzzywuzzy==0.10.0
 idna==2.1
 ipaddress==1.0.16
 lxml==3.6.0
