@@ -38,33 +38,36 @@ class Manager(object):
         :param item:
         :return:
         """
-        term = item.get(search_by)
-        output_lines = []
-        updated_item = False
-        fhandler = open(self.db.output, 'r')
-        for ln in fhandler.readlines():
-            data = self.db.dec(ln)
-            # Update row if found
-            if data.get(search_by):
-                if ratio is None and data.get(search_by) == term:
-                    ln = self.db.enc(item)
-                    updated_item = True
-                elif ratio and fuzz.partial_ratio(data.get(search_by), term):
-                    ln = self.db.enc(item)
-                    updated_item = True
+        try:
+            term = item.get(search_by)
+            output_lines = []
+            updated_item = False
+            fhandler = open(self.db.output, 'r')
+            for ln in fhandler.readlines():
+                data = self.db.dec(ln)
+                # Update row if found
+                if data.get(search_by):
+                    if ratio is None and data.get(search_by) == term:
+                        ln = self.db.enc(item)
+                        updated_item = True
+                    elif ratio and fuzz.partial_ratio(data.get(search_by), term):
+                        ln = self.db.enc(item)
+                        updated_item = True
 
-            # Write line
-            output_lines.append(ln)
-        fhandler.close()
+                # Write line
+                output_lines.append(ln)
+            fhandler.close()
 
-        # Create item
-        if not updated_item:
-            output_lines.append(self.db.enc(item) + '\n')
+            # Create item
+            if not updated_item:
+                output_lines.append(self.db.enc(item) + '\n')
 
-        # Write data
-        fhandler = open(self.db.output, 'w')
-        fhandler.writelines(output_lines)
-        return fhandler.close()
+            # Write data
+            fhandler = open(self.db.output, 'w')
+            fhandler.writelines(output_lines)
+        except Exception, e:
+            print 'Failed to update item {}. Error was: {}'.format(item.get('name', 'Untitled'), e.message)
+        return True
 
     def get(self, search_term, by=settings.PRIMARY_FIELD):
         """
