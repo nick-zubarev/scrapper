@@ -118,11 +118,6 @@ class Manager(object):
                 continue
             item[k] = v
 
-        print '-' * 200
-        print '-' * 20, 'Merging'
-        print 'source', item1
-        print 'target', item2,
-        print 'result', item
         return item
 
 
@@ -310,8 +305,8 @@ class Database(object):
         """
         result = []
         for i in lst:
-            if i in lst: continue
-            if not len(i.strip()): continue
+            if len(i.strip()) == 0 or i in result:
+                continue
             result.append(i)
         return result
 

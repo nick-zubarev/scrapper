@@ -20,6 +20,7 @@
 
 import re
 import json
+import time
 import urllib2
 import random
 from scrapy import log
@@ -37,6 +38,13 @@ class RandomProxy(object):
     """
     CLASS_MATCH = re.compile(r'\.(.+?)\{display:(\w+)\}')
 
+    conf = {
+        'fast': getattr(settings, 'USE_FASTEST_PROXIES', True),
+        'retry': getattr(settings, 'RELOAD_PROXIES_AFTER', 5),
+        'min_speed': getattr(settings, 'FASTEST_PROXIES_MINIMAL_SPEED', 60),
+        'retry_times': getattr(settings, 'RELOAD_PROXIES_TIMES', 10),
+    }
+
     def __init__(self):
         """
         Load proxies
@@ -51,11 +59,17 @@ class RandomProxy(object):
         Load while has not proxies loaded
         :return:
         """
-        while len(self.proxies) == 0:
-            if settings.USE_FASTEST_PROXIES:
+        retries = self.conf['retry_times']
+        while retries > 0 and len(self.proxies) == 0:
+            time.sleep(self.conf['retry'])
+            if self.conf['fast']:
                 self.load_proxy_hidemyass()
             else:
                 self.load_proxy_gimmeproxy()
+            retries -= 1
+
+        # Sort proxies
+        self.proxies = sorted(self.proxies, key=lambda x: x['speed'], reverse=True)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -81,7 +95,7 @@ class RandomProxy(object):
             if not len(self.proxies):
                 self.load_new_proxies()
 
-            request.meta['proxy'] = random.choice(self.proxies)
+            request.meta['proxy'] = self.proxies[0]
         elif 'proxy' in request.meta:
             del request.meta['proxy']
 
@@ -93,10 +107,16 @@ class RandomProxy(object):
         :param spider:
         :return:
         """
-        # Remove failed proxy
         proxy = request.meta['proxy']
-        if proxy in self.proxies:
-            self.proxies.remove(proxy)
+        failed = None
+        for x in self.proxies:
+            if x['http'] == proxy:
+                failed = x
+                break
+
+        # Remove failed proxy
+        if failed in self.proxies:
+            self.proxies.remove(failed)
 
         # Load new proxies
         if not len(self.proxies):
@@ -109,7 +129,7 @@ class RandomProxy(object):
         """
         try:
             proxy = urllib2.urlopen('http://gimmeproxy.com/api/getProxy?get=true&supportsHttps=true&maxCheckPeriod=3600').read()
-            self.proxies = [json.loads(proxy)['curl']]
+            self.proxies = [{'http': json.loads(proxy)['curl'], 'speed': 50}]
             log.msg('Loaded new proxy: {}'.format(self.proxies))
         except urllib2.HTTPError, e:
             log.msg('Proxy does not loaded: {}'.format(e.message))
@@ -129,7 +149,7 @@ class RandomProxy(object):
                     tds = tr.findAll('td')
                     spd = self._parse_spd(tds[4])
                     proto = tds[6].text.lower().strip()
-                    if spd < settings.FASTEST_PROXIES_MINIMAL_SPEED or proto not in ['http', 'https']:
+                    if spd < self.conf['min_speed'] or proto not in ['http', 'https']:
                         continue
 
                     port = tds[2].text.strip()
@@ -137,13 +157,13 @@ class RandomProxy(object):
                     if not ip:
                         continue
 
-                    self.proxies.append('{}://{}:{}'.format(proto, ip, port))
+                    self.proxies.append({'http': '{}://{}:{}'.format(proto, ip, port), 'speed': spd})
                 except:
                     pass
             log.msg('Loaded {} new fast proxies: {}'.format(len(self.proxies), ', '.join(self.proxies)))
         except urllib2.HTTPError, e:
             log.msg('Fastest proxies does not loaded: {}'.format(e.message))
-            log.msg('Try to get any proxy')
+            log.msg('Try to get any proxy from gimmeproxy')
             self.load_proxy_gimmeproxy()
 
     def _parse_ip(self, ip_html, style):
