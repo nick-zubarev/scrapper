@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import os
+import requests
 from fuzzywuzzy import fuzz
 from crawler import settings
 
@@ -30,7 +32,7 @@ class Manager(object):
         """
         if not os.path.getsize(self.db.output):
             headers = map(lambda x: x['verbose'], self.db.HEADERS.values())
-            self.db.append(self.db.CSV_SEPARATOR.join(headers))
+            self.db.append(self.db.CSV_SEPARATOR.join(headers) + '\n')
 
     def update_item(self, item, search_by=settings.PRIMARY_FIELD, ratio=None):
         """
@@ -38,35 +40,33 @@ class Manager(object):
         :param item:
         :return:
         """
-        try:
-            term = item.get(search_by)
-            output_lines = []
-            updated_item = False
-            fhandler = open(self.db.output, 'r')
-            for ln in fhandler.readlines():
-                data = self.db.dec(ln)
-                # Update row if found
-                if data.get(search_by):
-                    if ratio is None and data.get(search_by) == term:
-                        ln = self.db.enc(item)
-                        updated_item = True
-                    elif ratio and fuzz.partial_ratio(data.get(search_by), term):
-                        ln = self.db.enc(item)
-                        updated_item = True
+        term = item.get(search_by)
+        output_lines = []
+        updated_item = False
+        fhandler = open(self.db.output, 'rw+')
+        for ln in fhandler.readlines():
+            data = self.db.dec(ln)
+            # Update row if found
+            if data.get(search_by):
+                if ratio is None and data.get(search_by) == term:
+                    ln = self.db.enc(self.merge(data, item))
+                    updated_item = True
+                elif ratio and fuzz.partial_ratio(data.get(search_by), term) >= ratio:
+                    ln = self.db.enc(self.merge(data, item))
+                    updated_item = True
 
-                # Write line
-                output_lines.append(ln)
-            fhandler.close()
+            # Write line
+            output_lines.append(ln)
+        fhandler.close()
 
-            # Create item
-            if not updated_item:
-                output_lines.append(self.db.enc(item) + '\n')
+        # Create item
+        if not updated_item:
+            self.db.append(self.db.enc(item))
+            return True
 
-            # Write data
-            fhandler = open(self.db.output, 'w')
-            fhandler.writelines(output_lines)
-        except Exception, e:
-            print 'Failed to update item {}. Error was: {}'.format(item.get('name', 'Untitled'), e.message)
+        # Write data
+        fhandler = open(self.db.output, 'w')
+        fhandler.writelines(output_lines)
         return True
 
     def get(self, search_term, by=settings.PRIMARY_FIELD):
@@ -103,6 +103,27 @@ class Manager(object):
             if data.get(by) and fuzz.partial_ratio(search_term, data.get(by)) >= ratio:
                 yield data
         fhandler.close()
+
+    def merge(self, item1, item2):
+        """
+        Merge items
+        :param item1:
+        :param item2:
+        :return:
+        """
+        item = item1
+        for k, v in item2.iteritems():
+            if self.db.col_data(k).get('list'):
+                item[k] += v
+                continue
+            item[k] = v
+
+        print '-' * 200
+        print '-' * 20, 'Merging'
+        print 'source', item1
+        print 'target', item2,
+        print 'result', item
+        return item
 
 
 class Database(object):
@@ -172,6 +193,17 @@ class Database(object):
         self.output = os.path.join(self.ROOT_DIR, filename_csv)
         self.manager = Manager(self)
 
+    def col_data(self, name):
+        """
+        Get header info
+        :param name:
+        :return:
+        """
+        for i in self.HEADERS.values():
+            if i['name'] == name:
+                return i
+        return {}
+
     def write(self, lines=None):
         """
         Write lines
@@ -211,7 +243,7 @@ class Database(object):
         :return:
         """
         fhandler = file(self.output, 'a')
-        fhandler.write(line + '\n')
+        fhandler.write(line)
         return fhandler.close()
 
     @staticmethod
@@ -233,14 +265,14 @@ class Database(object):
         :return:
         """
         return self.CSV_SEPARATOR.join([
-            dictionary.get('name', ''),
-            dictionary.get('email', ''),
-            dictionary.get('phone', ''),
-            dictionary.get('website', ''),
-            dictionary.get('direct', 'No'),
-            self.COL_SEPARATOR.join(dictionary.get('category', [])),
-            self.COL_SEPARATOR.join(dictionary.get('location', [])),
-        ])
+            self.clen(dictionary.get('name', '')),
+            self.clen(dictionary.get('email', '')),
+            self.clen(dictionary.get('phone', '')),
+            self.clen(dictionary.get('website', '')),
+            self.clen(dictionary.get('direct', 'No')),
+            self.COL_SEPARATOR.join(self.clen(dictionary.get('category', []))),
+            self.COL_SEPARATOR.join(self.clen(dictionary.get('location', []))),
+        ]) + '\n'
 
     def dec(self, line):
         """
@@ -258,3 +290,41 @@ class Database(object):
 
             dictionary[dcol['name']] = value
         return dictionary
+
+    def clen(self, string):
+        """
+        Clean entity
+        :param string:
+        :return:
+        """
+        clean = lambda x: x.replace(self.CSV_SEPARATOR, '').replace(self.COL_SEPARATOR, '').strip()
+        if isinstance(string, list):
+            return map(clean, self.unique_list(string))
+        return clean(string)
+
+    def unique_list(self, lst):
+        """
+        Unique list items
+        :param lst:
+        :return:
+        """
+        result = []
+        for i in lst:
+            if i in lst: continue
+            if not len(i.strip()): continue
+            result.append(i)
+        return result
+
+def proxy_get_url(url, proxy):
+    """
+    Load url with proxy
+    :param url:
+    :param proxy:
+    :return:
+    """
+    return requests.get(
+        url=url,
+        proxies={"http": proxy},
+        allow_redirects=False,
+        timeout=settings.DOWNLOAD_TIMEOUT
+    ).text

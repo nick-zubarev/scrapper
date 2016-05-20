@@ -12,6 +12,7 @@ class CompanyItem(scrapy.Item):
     name = scrapy.Field()
     email = scrapy.Field()
     phone = scrapy.Field()
+    website = scrapy.Field()
     direct = scrapy.Field()
     category = scrapy.Field()
     location = scrapy.Field()

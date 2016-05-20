@@ -17,6 +17,9 @@ class StoragePipeline(object):
         :param spider:
         :return:
         """
+        if not item['name']:
+            return item
+
         self.db.manager.update_item(item=item, ratio=settings.MIN_MATCH_RATIO if settings.USE_MATCH_RATIO else None)
         return item
 
