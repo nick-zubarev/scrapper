@@ -6,6 +6,7 @@ import os
 import requests
 from fuzzywuzzy import fuzz
 from crawler import settings
+from urllib2 import urlopen
 
 
 class Manager(object):
@@ -262,6 +263,15 @@ class Database(object):
         :param dictionary:
         :return:
         """
+        for k, v in dictionary.iteritems():
+            if self.col_data(k).get('list'):
+                if isinstance(v, list):
+                    continue
+                else:
+                    dictionary[k] = [v]
+            elif isinstance(v, list):
+                dictionary[k] = self.COL_SEPARATOR.join(v)
+
         return self.CSV_SEPARATOR.join([
             self.clen(dictionary.get('name', '')),
             self.clen(dictionary.get('email', '')),
@@ -278,7 +288,7 @@ class Database(object):
         :param dictionary:
         :return:
         """
-        dictionary = {}
+        dictionary = self.defaults()
         for i, col in enumerate(line.split(self.CSV_SEPARATOR)):
             dcol = self.HEADERS.get(i, {'name': 'unknown', 'verbose': 'Unknown'})
 
@@ -313,16 +323,22 @@ class Database(object):
             result.append(i)
         return result
 
-def proxy_get_url(url, proxy):
+
+def proxy_get_url(url, proxy=None):
     """
     Load url with proxy
     :param url:
     :param proxy:
     :return:
     """
-    return requests.get(
+    if proxy is not None:
+        return requests.get(
+            url=url,
+            proxies={"http": proxy},
+            allow_redirects=False,
+            timeout=settings.DOWNLOAD_TIMEOUT
+        ).text
+    return urlopen(
         url=url,
-        proxies={"http": proxy},
-        allow_redirects=False,
         timeout=settings.DOWNLOAD_TIMEOUT
-    ).text
+    ).read()
