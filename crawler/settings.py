@@ -25,10 +25,10 @@ USE_FASTEST_PROXIES = True
 FASTEST_PROXIES_MINIMAL_SPEED = 70
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Used for filtering failed proxies
-RETRY_TIMES = 10
+RETRY_TIMES = 5
 RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
 
 # Override the default request headers:
