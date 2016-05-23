@@ -49,4 +49,33 @@ class StSpider(BaseSpider):
         meta = response.meta
 
         company['name'] = ' '.join(meta['title'].split(' ')[1:])
+
+        # Try to parse company category
+        try:
+            category = body.find('li', attrs={'class': 'lvl-1 current'}).find('span', attrs={'itemprop': 'title'}).text
+            company['category'] = [category.strip()]
+        except Exception, e:
+            self.logger.error('Can not parse company category: {}'.format(e.message))
+
+        # Try to parse company website
+        try:
+            website = body.find('span', attrs={'class': 'url'}).text.strip()
+            company['website'] = website
+        except Exception, e:
+            self.logger.error('Can not parse company website: {}'.format(e.message))
+
+        # Try to parse company locations
+        try:
+            locations = body.findAll('span', attrs={'itemprop': 'addressLocality'})
+            company['location'] = [x.text.strip() for x in locations]
+        except Exception, e:
+            self.logger.error('Can not parse company location: {}'.format(e.message))
+
+        # Try to get book now
+        try:
+            company['direct'] = 'Yes' if 'Book now' in response.body else 'No'
+        except Exception, e:
+            self.logger.error('Company {} does not booked'.format(company['name']))
+
+
         print company
