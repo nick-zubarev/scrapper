@@ -111,7 +111,10 @@ class RandomProxy(object):
         :param spider:
         :return:
         """
-        proxy = request.meta['proxy']
+        proxy = request.meta['proxy'] if 'proxy' in request.meta else None
+        if proxy is None:
+            return
+
         failed = None
         for x in self.proxies:
             if x['http'] == proxy:
