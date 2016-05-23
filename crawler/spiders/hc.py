@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import scrapy
 from scrapy.http import Request
 from BeautifulSoup import BeautifulSoup
 from crawler.items import CompanyItem
-from urlparse import urlparse
+from crawler.spiders import BaseSpider
 from crawler.utils import Database, proxy_get_url
 from random import random
 from urllib2 import urlopen
 
 
-class HcSpider(scrapy.Spider):
+class HcSpider(BaseSpider):
     name = "hc"
     allowed_domains = []
     base_url = 'http://www.hotcourses.com'
@@ -19,15 +18,6 @@ class HcSpider(scrapy.Spider):
     )
 
     use_proxy = True
-
-    def abs_url(self, url):
-        """
-        Make absolute url
-        :param url:
-        :return:
-        """
-        url_data = urlparse(url)
-        return '{}{}?{}'.format(self.base_url, url_data.path, url_data.query)
 
     def parse(self, response):
         """

@@ -38,20 +38,22 @@ class RandomProxy(object):
     CLASS_MATCH = re.compile(r'\.(.+?)\{display:(\w+)\}')
 
     conf = {
-        'fast': getattr(settings, 'USE_FASTEST_PROXIES', True),
+        'fast': getattr(settings, 'USE_FASTEST_PROXIES', False),
         'retry': getattr(settings, 'RELOAD_PROXIES_AFTER', 5),
         'min_speed': getattr(settings, 'FASTEST_PROXIES_MINIMAL_SPEED', 60),
-        'retry_times': getattr(settings, 'RELOAD_PROXIES_TIMES', 10),
+        'retry_times': getattr(settings, 'RELOAD_PROXIES_TIMES', 5),
     }
 
-    def __init__(self):
+    def __init__(self, load_proxy=False):
         """
         Load proxies
         :param conf:
         :return:
         """
         self.proxies = []
-        self.load_new_proxies()
+        self.use_proxy = load_proxy
+        if self.use_proxy:
+            self.load_new_proxies()
 
     def load_new_proxies(self):
         """
@@ -67,6 +69,9 @@ class RandomProxy(object):
                 self.load_proxy_gimmeproxy()
             retries -= 1
 
+        if not len(self.proxies) and self.conf['fast']:
+            self.load_proxy_gimmeproxy()
+
         # Sort proxies
         self.proxies = sorted(self.proxies, key=lambda x: x['speed'], reverse=True)
 
@@ -77,7 +82,7 @@ class RandomProxy(object):
         :param crawler:
         :return:
         """
-        return cls()
+        return cls(crawler.spider.use_proxy)
 
     def process_request(self, request, spider):
         """
@@ -129,7 +134,7 @@ class RandomProxy(object):
         try:
             proxy = urllib2.urlopen('http://gimmeproxy.com/api/getProxy?get=true&supportsHttps=true&maxCheckPeriod=3600').read()
             self.proxies = [{'http': json.loads(proxy)['curl'], 'speed': 50}]
-            log.msg('Loaded new proxy: {}'.format(self.proxies[0]['http']))
+            log.msg('Loaded new proxy: {} with speed 50%'.format(self.proxies[0]['http']))
         except urllib2.HTTPError, e:
             log.msg('Proxy does not loaded: {}'.format(e.message))
 
@@ -159,7 +164,7 @@ class RandomProxy(object):
                     self.proxies.append({'http': '{}://{}:{}'.format(proto, ip, port), 'speed': spd})
                 except:
                     pass
-            log.msg('Loaded {} new fast proxies: {}'.format(len(self.proxies), ', '.join(map(lambda x: x['http'], self.proxies))))
+            log.msg('Loaded {} new fast proxies: {}'.format(len(self.proxies), ', '.join(map(lambda x: x['http'] + ' [' + str(x['speed']) + ']', self.proxies))))
         except urllib2.HTTPError, e:
             log.msg('Fastest proxies does not loaded: {}'.format(e.message))
             log.msg('Try to get any proxy from gimmeproxy')
