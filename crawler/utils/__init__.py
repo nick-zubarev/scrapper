@@ -237,9 +237,12 @@ class Database(object):
         :param line:
         :return:
         """
-        fhandler = file(self.output, 'a')
-        fhandler.write(line)
-        return fhandler.close()
+        try:
+            fhandler = file(self.output, 'a')
+            fhandler.write(line)
+            return fhandler.close()
+        except:
+            return False
 
     @staticmethod
     def defaults():
