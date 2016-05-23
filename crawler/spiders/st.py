@@ -36,7 +36,6 @@ class StSpider(BaseSpider):
                     'title': item.find('img')['title']
                 }
             )
-            break
 
     def parse_item(self, response):
         """
@@ -77,5 +76,4 @@ class StSpider(BaseSpider):
         except Exception, e:
             self.logger.error('Company {} does not booked'.format(company['name']))
 
-
-        print company
+        yield company
