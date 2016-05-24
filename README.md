@@ -25,7 +25,7 @@ Activate environment and install requirements
  - **tg** - courses.theguardian.com
  - **st** - springest.com
  - **hc** - hotcourses.com
- - **zoom** - zoominfo.com
+ - **zoom** - zoominfo.com - *only for completion empty columns parsed in other spiders*
  
 #### Parsing
 
@@ -38,3 +38,13 @@ For example hotcourses
     source env/bin/activate
     cd project/
     scrapy crawl hc
+
+##### Parsing proxy options
+
+By default proxies arn't used. But if you see some errors like **Error 403** or **Error 400** you can start scrapping with proxy. If you want to forced disable proxy
+
+    scrapy crawl [SPIDER_NAME] -a noproxy=true
+
+For forcing use proxy
+
+    scrapy crawl [SPIDER_NAME] -a proxy=true
