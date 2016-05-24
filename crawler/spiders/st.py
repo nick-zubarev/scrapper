@@ -16,6 +16,11 @@ class StSpider(BaseSpider):
 
     use_proxy = False
 
+    def abs_url(self, url):
+        if 'oracle' in url: # Skip problem page
+            return
+        return super(StSpider, self).abs_url(url)
+
     def parse(self, response):
         """
         Parse companies
@@ -52,7 +57,7 @@ class StSpider(BaseSpider):
         # Try to parse company category
         try:
             category = body.find('li', attrs={'class': 'lvl-1 current'}).find('span', attrs={'itemprop': 'title'}).text
-            company['category'] = [category.strip()]
+            company['category'] = [category.replace('...', '').strip()]
         except Exception, e:
             self.logger.error('Can not parse company category: {}'.format(e.message))
 
