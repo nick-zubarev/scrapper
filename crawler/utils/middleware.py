@@ -199,7 +199,7 @@ class RandomProxy(object):
         hidden = map(lambda x: x[0], filter(lambda x: 'none' in x[1], self.CLASS_MATCH.findall(style)))
         items = []
         for block in blocks:
-            if block.get('class', '--------') in hidden:
+            if block.get('class') in hidden:
                 continue
             items.append(block.text)
 
