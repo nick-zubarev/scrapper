@@ -273,13 +273,13 @@ class Database(object):
                 dictionary[k] = self.COL_SEPARATOR.join(v)
 
         return self.CSV_SEPARATOR.join([
-            self.clen(dictionary.get('name', '')),
-            self.clen(dictionary.get('email', '')),
-            self.clen(dictionary.get('phone', '')),
-            self.clen(dictionary.get('website', '')),
-            self.clen(dictionary.get('direct', 'No')),
-            self.COL_SEPARATOR.join(self.clen(dictionary.get('category', []))),
-            self.COL_SEPARATOR.join(self.clen(dictionary.get('location', []))),
+            self.clean(dictionary.get('name', '')),
+            self.clean(dictionary.get('email', '')),
+            self.clean(dictionary.get('phone', '')),
+            self.clean(dictionary.get('website', '')),
+            self.clean(dictionary.get('direct', 'No')),
+            self.COL_SEPARATOR.join(self.clean(dictionary.get('category', []))),
+            self.COL_SEPARATOR.join(self.clean(dictionary.get('location', []))),
         ]) + '\n'
 
     def dec(self, line):
@@ -299,7 +299,7 @@ class Database(object):
             dictionary[dcol['name']] = value
         return dictionary
 
-    def clen(self, string):
+    def clean(self, string):
         """
         Clean entity
         :param string:
