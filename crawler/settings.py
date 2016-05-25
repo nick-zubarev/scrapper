@@ -29,7 +29,7 @@ ROBOTSTXT_OBEY = False
 
 # Used for filtering failed proxies
 RETRY_TIMES = 5
-RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
+RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 408]
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
