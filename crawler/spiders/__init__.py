@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 import scrapy
 from urlparse import urlparse
+from crawler.utils import Database
+from crawler.utils.useragents import USER_AGENT_LIST
+from crawler.settings import DB_FILENAME
 
 
 class BaseSpider(scrapy.Spider):
@@ -9,6 +12,9 @@ class BaseSpider(scrapy.Spider):
 
     # Use proxy for this spider
     use_proxy = False
+
+    db = Database(filename_csv=DB_FILENAME)
+    ua = USER_AGENT_LIST
 
     def __init__(self, name=None, noproxy=False, proxy=False, **kwargs):
         if bool(noproxy) is True:

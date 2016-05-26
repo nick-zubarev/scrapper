@@ -9,16 +9,12 @@ from scrapy.http import FormRequest, Request
 from BeautifulSoup import BeautifulSoup
 from random import choice
 from crawler.items import CompanyItem
-from crawler.utils.useragents import USER_AGENT_LIST
 
 
 class ZoomSpider(BaseSpider):
     name = "zoom"
     base_url = "http://zoominfo.com"
     allowed_domains = ["zoominfo.com"]
-
-    db = Database(filename_csv=DB_FILENAME)
-    ua = USER_AGENT_LIST
 
     PHONE_NUMBER_RE = re.compile(r'\+*\d{,3}\s*\(*\d{1,4}\)*\s*\d{3}\-\d{4}')
 
