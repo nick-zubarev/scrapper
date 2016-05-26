@@ -29,7 +29,6 @@ class ZoomSpider(BaseSpider):
         companies = self.db.iterate(lambda ln: self.db.dec(ln))
         companies = filter(lambda x: not x['phone'] or len(x['website']) < 7, companies)
         self.logger.debug('Loaded {} companies'.format(len(companies)))
-        self.logger.debug('='*50)
 
         for comp in companies:
             search_term = comp['name']

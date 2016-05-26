@@ -9,7 +9,7 @@ DB_FILENAME = 'database.csv'
 PRIMARY_FIELD = 'name'
 
 # Compare and make unique with fuzzywuzzy
-# token ration text processor
+# token ratio text processor
 USE_MATCH_RATIO = False
 MIN_MATCH_RATIO = 95 # in %
 
@@ -22,7 +22,16 @@ USE_FASTEST_PROXIES = True
 
 # If you use fastest proxies, you can
 # configure minimal speed in %
+# By default: 70%
 FASTEST_PROXIES_MINIMAL_SPEED = 70
+
+# Timeout to avoid ban and parse proxies
+# By default: 5 seconds
+RELOAD_PROXIES_AFTER = 5
+
+# How mach times we need to try
+# to load proxies
+RELOAD_PROXIES_TIMES = 5
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
