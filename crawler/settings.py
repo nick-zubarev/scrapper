@@ -11,7 +11,7 @@ PRIMARY_FIELD = 'name'
 # Compare and make unique with fuzzywuzzy
 # token ratio text processor
 USE_MATCH_RATIO = False
-MIN_MATCH_RATIO = 95 # in %
+MIN_MATCH_RATIO = 98 # in %
 
 # May be disabled for some spiders
 # ignoring this config

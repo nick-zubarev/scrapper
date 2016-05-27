@@ -93,7 +93,12 @@ class HcSpider(BaseSpider):
 
         # Parse company website
         try:
-            company['website'] = self.website_url(body.find('a', attrs={'class': 'btn bweb vwo_vweb'})['onclick'], response.meta['proxy'])
+            website_proxy = body.find('a', attrs={'class': 'btn bweb vwo_vweb'})
+            request_proxy = response.meta['proxy'] if 'proxy' in response.meta else None
+            company['website'] = self.website_url(
+                call=website_proxy['onclick'],
+                proxy=request_proxy
+            )
         except Exception, e:
             self.logger.error('Can not parse company website: {}'.format(e.message))
 
@@ -140,10 +145,7 @@ class HcSpider(BaseSpider):
 
         self.logger.debug('Trying to get website url <GET {}>'.format(self.abs_url(ws_uri)))
 
-        if proxy is None:
-            content = urlopen(self.abs_url(ws_uri), timeout=4).read()
-        else:
-            content = proxy_get_url(self.abs_url(ws_uri), proxy)
-
+        # Parse website URL
+        content = proxy_get_url(self.abs_url(ws_uri), proxy)
         content = BeautifulSoup(content)
         return content.find('link', attrs={'rel': 'shortlink'})['href']

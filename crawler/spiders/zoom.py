@@ -69,7 +69,10 @@ class ZoomSpider(BaseSpider):
         body = BeautifulSoup(response.body)
         company = response.meta['company']
         try:
-            company_profile_page = body.find('td', attrs={'class': 'name'}).find('a')['href'].replace('#!', '')
+            company_profile_page = body.find('td', attrs={
+                'class': 'name'
+            }).find('a')['href'].replace('#!', '')
+
             yield Request(
                 url=self.abs_url(company_profile_page),
                 meta={'company': response.meta['company']},
@@ -99,7 +102,10 @@ class ZoomSpider(BaseSpider):
         # Try to find company phone number
         if not company['phone']:
             try:
-                phones = body.find('span', attrs={'class': 'companyContactNo'}).text
+                phones = body.find('span', attrs={
+                    'class': 'companyContactNo'
+                }).text
+
                 company['phone'] = Database.COL_SEPARATOR.join(self.PHONE_NUMBER_RE.findall(phones))
             except Exception, e:
                 self.logger.error('Can not parse company phone numbers: {}'.format(e.message))
@@ -107,14 +113,23 @@ class ZoomSpider(BaseSpider):
         # Find website
         if not company['website']:
             try:
-                company['website'] = body.find('div', attrs={'class': 'companyContact'}).find('a', attrs={'rel': 'NOFOLLOW'})['href']
+                website = body.find('div', attrs={
+                    'class': 'companyContact'
+                }).find('a', attrs={
+                    'rel': 'NOFOLLOW'
+                })
+
+                company['website'] = website['http']
             except Exception, e:
                 self.logger.error('Can not parse company website: {}'.format(e.message))
 
         # Try to find company address
         if not company['location']:
             try:
-                location = body.find('span', attrs={'class': 'companyAddress'}).text.strip()
+                location = body.find('span', attrs={
+                    'class': 'companyAddress'
+                }).text.strip()
+
                 if location not in company['location']:
                     if isinstance(company['location'], list):
                         company['location'].append(location)

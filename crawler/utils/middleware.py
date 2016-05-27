@@ -137,6 +137,7 @@ class RandomProxy(object):
         try:
             proxy = urllib2.urlopen('http://gimmeproxy.com/api/getProxy?get=true&supportsHttps=true&maxCheckPeriod=3600').read()
             self.proxies = [{'http': json.loads(proxy)['curl'], 'speed': 50}]
+
             log.msg('Loaded new proxy: {} with speed 50%'.format(self.proxies[0]['http']))
         except urllib2.HTTPError, e:
             log.msg('Proxy does not loaded: {}'.format(e.message))
@@ -167,7 +168,13 @@ class RandomProxy(object):
                     self.proxies.append({'http': '{}://{}:{}'.format(proto, ip, port), 'speed': spd})
                 except:
                     pass
-            log.msg('Loaded {} new fast proxies: {}'.format(len(self.proxies), ', '.join(map(lambda x: x['http'] + ' [' + str(x['speed']) + ']', self.proxies))))
+            log.msg('Loaded {} new fast proxies: {}'.format(
+                len(self.proxies),
+                ', '.join(
+                    map(lambda x: x['http'] + ' [' + str(x['speed']) + ']', self.proxies))
+                )
+            )
+
         except urllib2.HTTPError, e:
             log.msg('Fastest proxies does not loaded: {}'.format(e.message))
             log.msg('Try to get any proxy from gimmeproxy')
